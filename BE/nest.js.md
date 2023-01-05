@@ -6,6 +6,8 @@
 4. DI/ IoC
 5. nest.js
 6. typescript
+7. graphQL 연결
+8. mySQL 연결
 ----------------------
 
 # 1. OOP
@@ -431,3 +433,172 @@ class Aaa {
 
 ```
 - parameter로 받은 변수는 자동으로 클래스 내 변수로 저장된다.
+
+</br></br>
+
+# 7. grahQL 연결
+
+- nest.js 사용시 초기세팅정보는 다음 링크를 참고하자 </br>
+[nest.js setting] https://github.com/nestjs/nest/tree/master/sample
+
+- graphQL의 스키마를 먼저 정의한후 그 정의에 맞게 코드를 작성하는 기존의 Schema first방식과는 반대로 nest.js에서는 resolver만 만드는 것만으로도 스키마, docs가 만들어질 수 있는 code-first방식을 지원한다.
+
+1. 설치
+
+```
+> npm install @nestjs/graphql @nestjs/apollo graphql apollo-server-express
+```
+
+
+2. 사용예시
+
+- 기존의 controller --> resolver 로 사용
+
+module.ts
+```ts
+
+@Module({
+    imports: [],
+    controllers: [],
+    providers: [BoardResolver, BoardService]
+})
+
+export class BoardModule{
+
+}
+
+```
+
+- 최종적인 모듈들의 결합은 app모듈에서 이루어진다.
+
+</br></br>
+
+resolver.ts
+```ts
+
+@Resolver()
+
+class BoardResolver{
+    constructor(private readonly boardService:BoardService){}
+    
+    @Query(()=> String) //getHello의 return을 string으로 자동으로 만들어준다.
+    getHello(){
+        return this.boardService.aaa()
+    }
+
+}
+
+
+```
+- query()함수 import graphql로 해야되는 거 주의
+
+</br></br>
+
+service.ts
+```ts
+
+@Injectable()
+
+class BoardService{
+    aaa
+
+}
+
+```
+
+app.module.ts
+```ts
+
+@Module({
+    import: [
+        BoardModule,
+        //이부분은 외우지말고 걍 docs참고ㄱㄱ
+        GraphQLModule.forRoot<ApolloDriverConfig>({
+            driver: ApolloDriver,
+            
+            //스키마를 저장할 파일 경로
+            autoSchemaFile: 'src/commons/graphql/schema.gql',
+        }),
+
+    ],
+
+})
+
+export class AppModule{}
+
+```
+
+</br></br>
+
+# 8. mySQL 연결
+
+1. 설치
+
+```js
+> npm install --save @nestjs/typeorm typeorm@0.2 mysql2
+```
+- 실제 mysql이 아닌 mysql에 연결하기 위한 프로그램을 설치하는 것임
+
+</br></br>
+
+2. 사용
+
+app.module.ts
+```ts
+
+@Module({
+    import: [
+        BoardModule,
+        GraphQLModule.forRoot<ApolloDriverConfig>({
+            driver: ApolloDriver,
+            autoSchemaFile: 'src/commons/graphql/schema.gql',
+        }),
+
+        TypeOrmModule.forRoot({
+            type: "mysql",
+            host: "localhost",
+            port: 3006,
+            username: 'root',
+            password: '~~~',
+            database: '~~', //사용할 db
+            entities: [Board], //테이블들
+            synchronize: true,  //동기화여부
+            logging: true,  //sql쿼리문으로 어떻게 변경되었는지를 log로 확인가능하게 할지
+
+        })
+
+    ],
+
+})
+
+export class AppModule{}
+
+```
+</br></br>
+
+- 테이블작성
+entities> board.entity.ts
+```ts
+
+@Entity()
+class Board{
+    
+    @PrimaryGeneratedColumn("uuid")
+    number: number
+
+    @Column()
+    writer: string
+
+    @Column()
+    title: string
+
+    @Column()
+    contents: string
+}
+
+```
+- @를 달아서 table 생성과 column생성 요청
+- unique한 id를 자동으로 생성하게 하고 싶다면 @PrimaryGeneratedColumn()을 추가 
+    * "uuid" : 랜덤문자열, 
+    * "increment" : 게시글번호와같이 1씩 증가시킨 숫자를 primary key로 함
+
