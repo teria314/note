@@ -335,7 +335,7 @@ app.post("/products/refund", productController.refundProduct
     * `>` yarn install --production 명령은 dependencies에 있는 것들만 설치해줌 (devdependencies는 설치x)
 - src : api가 존재하는 소스코드
     * app.controller.ts
-    * app.modules.ts
+    * app.modules.ts    : 작성한 모듈들을 하나로 합쳐줌. (다른 폴더의 modules.ts : service, resolver등을 하나로 합쳐줌)
     * app.service.ts
     * main.ts
 
